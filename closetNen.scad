@@ -1,3 +1,5 @@
+//colocar a entrada do projeto um vetor []
+
 //placa generica
 module placa(comp=200, larg=50, espessura=2) {
     cube([comp, larg, espessura], center = true); 
@@ -62,55 +64,96 @@ module unidadeBasica() {
 }
 
 
-// TODO refazer gaveta simples = ela não é caixa,
-// 2 laterais, costas e frente, a parte de baixo - fundo - 
-// esta ha alguns mm longe do final da caixa
-// modelar o freso da caixa : laterais e costas
-//gaveta simples tamanho padrão
-//TODO parametrizar melhor esse metodo
-module gavetaS(comFundo=true){
+//frente = altura, comprimento, espessura
+//fundo e laterais = altura, comprimento, altura, altura_freso
+//base = larg, comp, espessura 
+module gavetaPadrao() { }
+
+//gaveta simples tamanho padrão - baseado na caixa
+// fba = comprimento do fundo (base) 
+// fla = largura do fundo (base)
+// cl = comprimento lateral
+// cb = comprimento base
+// la = largura do portal (profundidade)
+module gavetaS(fba=40, fla=100, cl=40, cb=100, la=18, comFundo=true){
   rotate([0,270,0])
-  caixa(fba=40, fla=100, cl=40, cb=100, la=18,comLE=true,comDE=true,comFundo=comFundo);  
+  caixa(fba=fba, fla=fla, cl=cl, 
+        cb=cb, la=la,
+        comLE=true,comDE=true,comFundo=comFundo);  
 }
 
-//TODO parametrizar melhor esse metodo
-module unidadePlacas(gcomp, gprof, sup=true, inf=true){
+module _placasSuperior(gcomp, gprof,dx,dz){
+        translate([dx, 0, dz+20]) placaTopo(gcomp, gprof);
+        translate([dx, 0, dz+40]) placaTopo(gcomp, gprof);
+        translate([dx, 0, dz+60]) placaTopo(gcomp, gprof);
+        translate([dx, 0, dz+80]) placaTopo(gcomp, gprof);
+}
+module _placasInferior(gcomp, gprof,dx,dz){
+        translate([dx, 0,dz-20]) placaTopo(gcomp, gprof);
+        translate([dx, 0,dz-40]) placaTopo(gcomp, gprof);
+        translate([dx, 0,dz-60]) placaTopo(gcomp, gprof);
+        translate([dx, 0,dz-80]) placaTopo(gcomp, gprof);
+}
+
+module _gavetasSuperior(dx,dz,comFundoUltimaGaveta) {
+        translate([dx, 0, dz]) gavetaS();
+        translate([dx, 0, dz+20]) gavetaS();
+        translate([dx, 0, dz+40]) gavetaS();
+        translate([dx, 0, dz+60]) gavetaS();
+        translate([dx, 0, dz+80]) gavetaS();
+}
+
+module _gavetasInferior(dx,dz,comFundoUltimaGaveta) {
+        translate([dx, 0, dz-20]) gavetaS();
+        translate([dx, 0, dz-40]) gavetaS();
+        translate([dx, 0, dz-60]) gavetaS();
+        translate([dx, 0, dz-80]) gavetaS();
+        translate([dx, 0, dz-100]) gavetaS(comFundo=comFundoUltimaGaveta);    
+}
+
+
+module unidadePlacas(gcomp, gprof, sup=true, inf=true, dx=25, dz=0){
     unidadeBasica();
     if (sup) {
-        translate([25,0, 20]) placaTopo(gcomp, gprof);
-        translate([25,0, 40]) placaTopo(gcomp, gprof);
-        translate([25,0, 60]) placaTopo(gcomp, gprof);
-        translate([25,0, 80]) placaTopo(gcomp, gprof);
-        //translate([25,0, 100]) placaTopo(gcomp, gprof);
+        _placasSuperior(gcomp, gprof,dx,dz);
     }    
     if (inf) {
-        translate([25,0,-20]) placaTopo(gcomp, gprof);
-        translate([25,0,-40]) placaTopo(gcomp, gprof);
-        translate([25,0,-60]) placaTopo(gcomp, gprof);
-        translate([25,0,-80]) placaTopo(gcomp, gprof);
-       // translate([25,0,-100]) placaTopo(gcomp, gprof);
+        _placasInferior(gcomp, gprof,dx,dz);
     }    
 } 
 
-//TODO parametrizar melhor esse metodo
 //guarda roupa 5 gavetas
-module unidadeGavetas(comFundoUltimaGaveta=false, inf=true, sup=true) {
+module unidadeGavetas(comFundoUltimaGaveta=false, inf=true, sup=true,
+    dx=25) {
     unidadeBasica();
-    
+    dz = 0;
     if (sup) {
-        translate([25,0, 0]) gavetaS();
-        translate([25,0, 20]) gavetaS();
-        translate([25,0, 40]) gavetaS();
-        translate([25,0, 60]) gavetaS();
-        translate([25,0, 80]) gavetaS();
+        _gavetasSuperior(dx,dz);
     }    
     if (inf) {
-        translate([25,0,-20]) gavetaS();
-        translate([25,0,-40]) gavetaS();
-        translate([25,0,-60]) gavetaS();
-        translate([25,0,-80]) gavetaS();
-        translate([25,0,-100]) gavetaS(comFundo=comFundoUltimaGaveta);
+        _gavetasInferior(dx,dz,comFundoUltimaGaveta);
     }    
+}
+
+module unidadeGavetasPlacas(
+   supP=false, infP=false, 
+   supG=false, infG=false, comFundoUltimaGaveta=false
+) {
+        unidadeBasica();
+        dz = 0;
+        if (supP) {
+            _placasSuperior(gcomp, gprof,dx,dz);
+        }     
+        if (infP) {
+            _placasInferior(gcomp, gprof,dx,dz);
+        }
+        if (supG) {
+            _gavetasSuperior(dx,dz);
+        }    
+        if (infG) {
+            _gavetasInferior(dx,dz,comFundoUltimaGaveta);
+        }    
+        
 }
 
 module parede1() {
@@ -122,4 +165,3 @@ module parede1() {
 }
 
 parede1();
-
