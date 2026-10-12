@@ -1,4 +1,4 @@
-placa = [100,50,5];
+placa = [100,50,3];
 
 furo = 3;
 margem = 8;
