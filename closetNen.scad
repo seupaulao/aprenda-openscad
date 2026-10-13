@@ -123,10 +123,10 @@ module _gavetasInferior(dx,dz,comFundoUltimaGaveta,gcomp,gprof,dist=20, n = 3) {
         }
 }
 
-//TODO implementar o modelo de gavetas e placas matricial
+//TODO - TESTAR
 module _colocarPlacaGaveta(dx,dz,pcomp,pprof,gcomp,gprof,orientacao,dist,n,v,la,lin=0,col=0) {
   
-    if (lin==0 && col==0) {
+    if (lin<=1 && col<=1) {
         //modelo linear
         for ( i = [1:1:n] ) {
                f = (orientacao == "S") ? dz - i * dist : dz + i * dist;
@@ -143,22 +143,47 @@ module _colocarPlacaGaveta(dx,dz,pcomp,pprof,gcomp,gprof,orientacao,dist,n,v,la,
         }        
     } else {
         //modelo matricial
+        contador = 0;
+        //falta calcular o tamanho das gavetas e placas no modelo matricial
         for (i=[1:1:lin]) {
-             for (j=[1:1:col]) {
-                 //ou placa ou gaveta
-             }
-        }
+            for (j=[1:1:col]) {
+                f = (orientacao == "S") ? dz - contador * dist : dz + contador * dist;
+                    //ou placa ou gaveta
+                    if (v[contador] == 0) {
+                        //placa
+                        translate([dx+5, 0, f]) 
+                        placaTopo(pcomp, pprof); 
+                    } else {
+                        //gaveta
+                        translate([dx+5, 0, f]) 
+                        gavetaS(gcomp,gprof,la=la);
+                    }
+                    contador = contador + 1;
+            }
+                
+        }        
     }
     
 }
 
-//TODO implementar a divisoria do maleiro matricial
-module matrizMaleiro(malin=2,macol=3,pMaleiro,vetor) {
-        for (i=[1:1:malin]) {
-             for (j=[1:1:macol]) {
-                 //criar as divisorias
-             }
-        }    
+//TODO - TESTAR
+module matrizMaleiro(malin=0,macol=0,pMaleiro,vetor) {
+        if ((malin >0 && macol > 0) && (malin > 1 || macol > 1)) {
+            largura = vetor.y;
+            altura = pMaleiro;
+            profundidade = vetor.z;
+            distAltura = altura / malin;
+            distLargura = largura / macol;
+            for (i=[1:1:malin]) {
+                //criar as divisorias
+                translate([0, 0, i*distAltura]) placaTopo(altura, profundidade);
+            }    
+            for (j=[1:1:macol]) {
+                //criar as divisorias
+                translate([0, j*distLargura, 0]) placaLateral(altura, largura);
+            }
+        }
+
 }
 
 /****************************
