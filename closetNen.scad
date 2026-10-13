@@ -66,7 +66,7 @@ module unidadeBasica(
    vetorcaixa, 
    permiteMeio=true,
    comLE=true, comDE=true, comFundo=true, 
-   permiteMaleiro=false, pMaleiro) {
+   permiteMaleiro=false, pMaleiro, moverMeio=0) {
     caixa(fba=vetorcaixa.x, fla=vetorcaixa.y, cl=vetorcaixa.x, cb=vetorcaixa.y, la=vetorcaixa.z,comLE=comLE,comDE=comDE,comFundo=comFundo);
     if (permiteMaleiro) {
          transporte = permiteMaleiro ? vetorcaixa.x/2-pMaleiro : 0;
@@ -75,7 +75,8 @@ module unidadeBasica(
     }
     if (permiteMeio) {
          transporte = permiteMaleiro ? vetorcaixa.x / 2 - pMaleiro * 3 : 0;
-         translate([vetorcaixa.z/2, 0, transporte ]) 
+         moverMeio = moverMeio == 0 ? transporte : moverMeio + transporte;
+         translate([vetorcaixa.z/2, 0, moverMeio ]) 
          placaTopo(altura=vetorcaixa.y, la=vetorcaixa.z);        
     }
     
@@ -123,66 +124,110 @@ module _gavetasInferior(dx,dz,comFundoUltimaGaveta,gcomp,gprof,dist=20, n = 3) {
         }
 }
 
-module _colocarPlacaGaveta(dx,dz,pcomp,pprof,gcomp,gprof,orientacao,dist,n,v,la) {
-    for ( i = [1:1:n] ) {
-           f = (orientacao == "S") ? dz - i * dist : dz + i * dist;
-       if (v[i-1] == 0) {
-           //placa
-           translate([dx+5, 0, f]) 
-           placaTopo(pcomp, pprof); 
-       } else {
-           //gaveta
-           translate([dx+5, 0, f]) 
-           gavetaS(gcomp,gprof,la=la);
-       }
-       
-    }        
+//TODO implementar o modelo de gavetas e placas matricial
+module _colocarPlacaGaveta(dx,dz,pcomp,pprof,gcomp,gprof,orientacao,dist,n,v,la,lin=0,col=0) {
+  
+    if (lin==0 && col==0) {
+        //modelo linear
+        for ( i = [1:1:n] ) {
+               f = (orientacao == "S") ? dz - i * dist : dz + i * dist;
+           if (v[i-1] == 0) {
+               //placa
+               translate([dx+5, 0, f]) 
+               placaTopo(pcomp, pprof); 
+           } else {
+               //gaveta
+               translate([dx+5, 0, f]) 
+               gavetaS(gcomp,gprof,la=la);
+           }
+           
+        }        
+    } else {
+        //modelo matricial
+        for (i=[1:1:lin]) {
+             for (j=[1:1:col]) {
+                 //ou placa ou gaveta
+             }
+        }
+    }
     
 }
 
+//TODO implementar a divisoria do maleiro matricial
+module matrizMaleiro(malin=2,macol=3,pMaleiro,vetor) {
+        for (i=[1:1:malin]) {
+             for (j=[1:1:macol]) {
+                 //criar as divisorias
+             }
+        }    
+}
+
+/****************************
+* desenha uma caixa vertical com divisor de meio, maleiro, gavetas ou placas
+*
+* permiteMeio - flag que determina se a caixa tera placa de meio
+* sup - flag indicando que as gavetas/placas estarao na porção acima da placa meio
+* inf - flag indica que as gavetas/placas estarao na porção abaixo da placa meio
+* comFundoUltimaGaveta - flag indica se a ultima gaveta do movel, a mais abaixo tera placa (TEMPORARIO)
+* dx - move gavetas e placas para frente e para trás no eixo X
+* pcomp e pprof - comprimento e profundidade de uma placa
+* gcomp e gprof - comprimento e profundidade de uma gaveta
+* vetorcaixa - [altura, base, profundidade]
+* comLE e comDE - flag que exibe ou não lateral esquerda e direita respectivamente
+* comFundo - flag que exibe ou não fundo/costas da caixa
+* permiteMaleiro - flag indicando que deve exibir maleiro
+* pMaleiro - se permiteMaleiro entao deve colocar a distancia do topo da caixa para dentro indicando o maleiro
+* dist - distancia entre as gavetas / placas
+* n - numero de itens placas e gavetas
+* la - altura das laterais de um gaveta
+* v - vetor onde 0 é placa e 1 é gaveta
+* moverMeio - se permiteMeio is true, distancia do meio da caixa para cima ou para baixo
+* malin e macol - linha e coluna das divisorias do maleiro
+* lin e col - linha e colunas das gavetas e placas em forma matricial
+se lin e col forem 0 usar n e v onde len(v) deve ser igual a n
+senao len(v) deve ser lin x col
+*****************************/
 module unidadeGavetasPlacas(
    permiteMeio=true,
    sup=false, inf=false, 
-   comFundoUltimaGaveta=false,dx=25,
-   pcomp,pprof,gcomp,gprof,vetorcaixa, comLE=true, comDE=true, comFundo=true,permiteMaleiro,pMaleiro,dist,n,la,v
-) {
-        unidadeBasica(vetorcaixa, permiteMeio, comLE=comLE, comDE=comDE, comFundo=comFundo,permiteMaleiro=permiteMaleiro,pMaleiro=pMaleiro);
+   comFundoUltimaGaveta=false,dx=0,
+   pcomp,pprof,gcomp,gprof,
+   vetorcaixa, comLE=true, comDE=true, 
+   comFundo=true,
+   permiteMaleiro,pMaleiro,
+   dist,n,la,v, 
+   moverMeio=0,malin=0,macol=0,lin=0,col=0) {
+       
+    unidadeBasica(vetorcaixa, permiteMeio, 
+                  comLE=comLE, comDE=comDE, comFundo=comFundo,
+                  permiteMaleiro=permiteMaleiro,pMaleiro=pMaleiro,
+                  moverMeio=moverMeio);
+       
+    if (malin!=0 && macol!=0) {
+         matrizMaleiro(malin,macol,pMaleiro,vetorcaixa);
+    }   
     
-        dz =  !permiteMaleiro ? 0 : -1 * (vetorcaixa.x - pMaleiro) / 2 / 4;
+    dz =  !permiteMaleiro ? 0 : -1 * (vetorcaixa.x - pMaleiro) / 2 / 4 + moverMeio;
     
     if (sup) {
-    _colocarPlacaGaveta(dx,dz,pcomp,pprof,gcomp,gprof,orientacao="N",dist=dist,n=n,la=la,v=v);        
+    _colocarPlacaGaveta(dx,dz,pcomp,pprof,gcomp,gprof,
+          orientacao="N",dist=dist,n=n,la=la,v=v,lin=0,col=0);        
     }
     if (inf) {
-    _colocarPlacaGaveta(dx,dz,pcomp,pprof,gcomp,gprof,orientacao="S",dist=dist,n=n,la=la,v=v);        
-    }
-    
-   //     if (supP) {
-   //         _placasSuperior(dx,dz,pcomp, pprof, 
-   //         dist=distp, n=np );
-   //     }     
-   //     if (infP) {
-   //         _placasInferior(dx,dz,pcomp, pprof, 
-   //         dist=distp, n=np );
-   //     }
-   //     if (supG) {
-   //         _gavetasSuperior(dx,dz,gcomp,gprof, 
-   //         dist=distg, n=ng );
-   //     }    
-   //     if (infG) {
-   //         _gavetasInferior(dx,dz,comFundoUltimaGaveta,
-   //         gcomp,gprof, dist=distg, n=ng );
-   //     }    
+    _colocarPlacaGaveta(dx,dz,pcomp,pprof,gcomp,gprof,
+          orientacao="S",dist=dist,n=n,la=la,v=v,lin=0,col=0);        
+    }   
         
 }
 
+//uma das paredes do closet modular
 module parede1() {
     _vetorcaixa1 = [250,90,68]; //altura,largura,profundidade
     
     translate([0,-2-_vetorcaixa1.y,0]) 
     unidadeGavetasPlacas(dx=25,pcomp=80,pprof=40,gcomp=40,gprof=80, vetorcaixa=_vetorcaixa1, permiteMeio=false, comLE=false);
     
-    unidadeGavetasPlacas(dx=25,pcomp=90,pprof=60,gcomp=60,gprof=90, vetorcaixa=_vetorcaixa1, permiteMaleiro=true, pMaleiro=50, permiteMeio=true,inf=true,dist=10, n=10, la=8, v=[0,0,0,1,1,1,1,1,1,1]);
+    unidadeGavetasPlacas(dx=25,pcomp=90,pprof=60,gcomp=60,gprof=90, vetorcaixa=_vetorcaixa1, permiteMaleiro=true, pMaleiro=50, permiteMeio=true,inf=true,dist=10, n=7, la=8, v=[0,0,0,1,1,1,1], moverMeio = -20);
     
     translate([0,2+_vetorcaixa1.y,0]) unidadeGavetasPlacas(
     dx=25,pcomp=90,pprof=40,gcomp=40,gprof=90, 
@@ -206,8 +251,3 @@ module parede1() {
 
 parede1();
 
-
-//permiteMaleiro = 50cm do teto
-//permiteMeio nas 3 ultimas
-//distancia entre tabuas e gavetas : deve ser parametrizado
-//numero de tabuas e gavetas       : deve ser parametrizado
