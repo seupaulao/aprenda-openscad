@@ -1,8 +1,8 @@
 placa = [100,50,3];
-
 furo = 3;
 margem = 8;
 
+module magica() {
 difference() {
     
     cube(placa);
@@ -18,6 +18,9 @@ difference() {
         cylinder(placa.z + 3, furo, furo);
     }
 }
+}
+
+magica();
 
 
  
