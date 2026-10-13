@@ -1,4 +1,3 @@
-//colocar a entrada do projeto um vetor []
 
 //placa generica
 module placa(altura=200, larg=50, espessura=2) {
