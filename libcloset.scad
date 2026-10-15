@@ -1,3 +1,8 @@
+//TODO refazer o vetorcaixa com de modo a permitir a passagem de parametros de forma mais clara,
+//por exemplo: [largura, altura, profundidade] ou [comprimento, largura, altura]
+// refatorar alguns métodos para receberem vetores de dimensões ao invés de parâmetros
+// a meta é o vetorcaixa deve ser padronizado com a entrada [x,y,z] sempre
+// hoje o vetorcaixa é [altura, base, profundidade] e isso causa confusão em alguns métodos
 
 //placa generica
 module placa(altura=200, larg=50, espessura=2) {
